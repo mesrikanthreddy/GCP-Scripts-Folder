@@ -1,0 +1,66 @@
+---
+- name: Deploy Cloud Run Service Scaling Script
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    project_id: "your-project-id"
+    region: "your-region"
+    service_name: "your-cloud-run-service-name"
+    script_path: "/path/to/Automate-Cloud-Run-Service-Scaling.py"
+
+  tasks:
+    - name: My First Play
+      hosts: webservers
+      tasks:
+        - name: Ensure Apache is at the latest version
+          yum:
+            name: httpd
+            state: latest
+
+    - name: Ensure required Python packages are installed
+      pip:
+        name:
+          - google-cloud-monitoring
+          - google-api-python-client
+        state: present
+
+    - name: Copy Cloud Run scaling script
+      copy:
+        src: "{{ script_path }}"
+        dest: "/opt/cloud_run_scaling.py"
+        mode: '0644'
+
+    - name: Update script with correct project ID, region, and service name
+      replace:
+        path: "/opt/cloud_run_scaling.py"
+        regexp: "{{ item.search }}"
+        replace: "{{ item.replace }}"
+      loop:
+        - { search: 'PROJECT_ID = "your-project-id"', replace: 'PROJECT_ID = "{{ project_id }}"' }
+        - { search: 'REGION = "your-region"', replace: 'REGION = "{{ region }}"' }
+        - { search: 'CLOUD_RUN_SERVICE = "your-cloud-run-service-name"', replace: 'CLOUD_RUN_SERVICE = "{{ service_name }}"' }
+
+    - name: Set up cron job to run the script daily
+      cron:
+        name: "Check and scale Cloud Run service"
+        minute: "0"
+        hour: "1"
+        job: "python3 /opt/cloud_run_scaling.py >> /var/log/cloud_run_scaling.log 2>&1"
+
+    - name: Ensure log file exists with correct permissions
+      file:
+        path: /var/log/cloud_run_scaling.log
+        state: touch
+        mode: '0644'
+        owner: root
+        group: root
+
+    - name: Test run the script
+      command: python3 /opt/cloud_run_scaling.py
+      register: script_output
+
+    - name: Display script output
+      debug:
+        var: script_output.stdout_lines

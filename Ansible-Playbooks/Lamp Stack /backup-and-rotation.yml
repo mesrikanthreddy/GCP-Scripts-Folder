@@ -1,0 +1,34 @@
+---
+- name: Set up log rotation
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Install logrotate
+      apt:
+        name: logrotate
+        state: present
+
+    - name: Configure log rotation for application logs
+      copy:
+        content: |
+          /var/log/myapp/*.log {
+            daily
+            missingok
+            rotate 14
+            compress
+            delaycompress
+            notifempty
+            create 0640 www-data adm
+            sharedscripts
+            postrotate
+                /usr/bin/service myapp restart
+            endscript
+          }
+        dest: /etc/logrotate.d/myapp
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Force log rotation
+      command: /usr/sbin/logrotate -f /etc/logrotate.conf

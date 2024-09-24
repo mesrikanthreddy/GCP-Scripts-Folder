@@ -1,0 +1,37 @@
+---
+- name: Configure Firewall
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Install ufw
+      apt:
+        name: ufw
+        state: present
+
+    - name: Allow SSH
+      ufw:
+        rule: allow
+        port: '22'
+
+    - name: Allow HTTP
+      ufw:
+        rule: allow
+        port: '80'
+
+    - name: Allow HTTPS
+      ufw:
+        rule: allow
+        port: '443'
+
+    - name: Enable UFW
+      ufw:
+        state: enabled
+
+    - name: Show UFW status
+      command: ufw status verbose
+      register: ufw_status
+
+    - name: Display UFW status
+      debug:
+        var: ufw_status.stdout_lines

@@ -1,0 +1,44 @@
+---
+- name: Install LAMP Stack
+  hosts: webservers
+  become: yes
+  vars:
+    mysql_root_password: "secure_password"
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install Apache, MySQL, PHP, and required PHP modules
+      apt:
+        name:
+          - apache2
+          - mysql-server
+          - php
+          - php-mysql
+          - libapache2-mod-php
+        state: present
+
+    - name: Start and enable Apache service
+      service:
+        name: apache2
+        state: started
+        enabled: yes
+
+    - name: Start and enable MySQL service
+      service:
+        name: mysql
+        state: started
+        enabled: yes
+
+    - name: Set MySQL root password
+      mysql_user:
+        name: root
+        password: "{{ mysql_root_password }}"
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+
+    - name: Create info.php file
+      copy:
+        content: "<?php phpinfo(); ?>"
+        dest: /var/www/html/info.php
