@@ -2,7 +2,7 @@ import requests
 import time
 
 # Your Google Maps API key
-API_KEY = 'AIzaSyDhw3gGILyAztXg4-xbVweyHe4N2ay7i9k'
+API_KEY = 'Key_insert_here'
 
 def get_coordinates(city_name, api_key):
     """Get latitude and longitude of the specified city using Geocoding API."""
