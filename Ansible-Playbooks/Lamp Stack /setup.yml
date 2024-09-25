@@ -1,0 +1,49 @@
+---
+- name: Deploy Node.js Application
+  hosts: app_servers
+  become: yes
+  vars:
+    app_dir: /opt/myapp
+    node_version: "14.x"
+
+  tasks:
+    - name: Install Node.js repository
+      shell: "curl -sL https://deb.nodesource.com/setup_{{ node_version }} | bash -"
+
+    - name: Install Node.js and npm
+      apt:
+        name:
+          - nodejs
+        state: present
+        update_cache: yes
+
+    - name: Create app directory
+      file:
+        path: "{{ app_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Clone application repository
+      git:
+        repo: 'https://github.com/yourusername/your-node-app.git'
+        dest: "{{ app_dir }}"
+        version: main
+
+    - name: Install app dependencies
+      npm:
+        path: "{{ app_dir }}"
+
+    - name: Install PM2 globally
+      npm:
+        name: pm2
+        global: yes
+
+    - name: Start the Node.js application with PM2
+      command: pm2 start {{ app_dir }}/app.js
+      args:
+        chdir: "{{ app_dir }}"
+
+    - name: Save PM2 process list and configure to start on boot
+      command: pm2 save
+      args:
+        chdir: "{{ app_dir }}"
